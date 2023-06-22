@@ -11,6 +11,9 @@ require("cairo")
 require("imlib2")
 require("settings")
 
+local scr_prefix_x = (scr_width - scale * 1220) / 2
+local scr_prefix_y = (scr_height - scale * 700) / 2
+
 function image(x, y, file)
     if file == nil then return end
 
@@ -25,11 +28,11 @@ end
 
 
 function line(startx, starty, endx, endy, thick, color, alpha)
-    cairo_set_line_width (cr, thick)
+    cairo_set_line_width (cr, scale * thick)
     cairo_set_line_cap  (cr, CAIRO_LINE_CAP_BUTT)
     cairo_set_source_rgba (cr, color_convert(color, alpha))
-    cairo_move_to (cr, startx, starty)
-    cairo_line_to (cr, endx, endy)
+    cairo_move_to (cr, scr_prefix_x + scale * startx, scr_prefix_y + scale * starty)
+    cairo_line_to (cr, scr_prefix_x + scale * endx, scr_prefix_y + scale * endy)
     cairo_stroke (cr)
 end
 
@@ -42,14 +45,14 @@ function ring_clockwise(x, y, radius, thickness, angle_begin, angle_end, value_s
     angle_end   = angle_end   * (2 * math.pi / 360) - (math.pi / 2)
     local progress = (value / max_value) * (angle_end - angle_begin)
 
-    cairo_set_line_width (cr, thickness)
+    cairo_set_line_width (cr, scale * thickness)
     cairo_set_source_rgba (cr, color_convert(colors.bg, colors.bg_alpha))
-    cairo_arc (cr, x, y, radius, angle_begin, angle_end)
+    cairo_arc (cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y, scale * radius, angle_begin, angle_end)
     cairo_stroke (cr)
 
-    cairo_set_line_width (cr, thickness)
+    cairo_set_line_width (cr, scale * thickness)
     cairo_set_source_rgba (cr, color_convert(fg_color, colors.fg_alpha))
-    cairo_arc(cr, x, y, radius, angle_begin, angle_begin + progress)
+    cairo_arc(cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y, scale * radius, angle_begin, angle_begin + progress)
     cairo_stroke (cr)
 end
 
@@ -62,14 +65,14 @@ function ring_anticlockwise(x, y, radius, thickness, angle_begin, angle_end, val
     angle_end   = angle_end   * (2 * math.pi / 360) - (math.pi / 2)
     local progress = (value / max_value) * (angle_end - angle_begin)
 
-    cairo_set_line_width (cr, thickness)
+    cairo_set_line_width (cr, scale * thickness)
     cairo_set_source_rgba (cr, color_convert(colors.bg, colors.bg_alpha))
-    cairo_arc_negative (cr, x, y, radius, angle_begin, angle_end)
+    cairo_arc_negative (cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y, scale * radius, angle_begin, angle_end)
     cairo_stroke (cr)
 
-    cairo_set_line_width (cr, thickness)
+    cairo_set_line_width (cr, scale * thickness)
     cairo_set_source_rgba (cr, color_convert(fg_color, colors.fg_alpha))
-    cairo_arc_negative (cr, x, y, radius, angle_begin, angle_begin + progress)
+    cairo_arc_negative (cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y, scale * radius, angle_begin, angle_begin + progress)
     cairo_stroke (cr)
 end
 
@@ -79,12 +82,12 @@ function rectangle_leftright(x, y, len, thick, value_str, max_value, color)
     if value > max_value then value = max_value end
 
     cairo_set_source_rgba(cr, color_convert(colors.bg, colors.bg_alpha))
-    cairo_rectangle(cr, x, y, len, thick)
+    cairo_rectangle(cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y, scale * len, scale * thick)
     cairo_fill(cr)
 
     local progress = (len / max_value) * value
     cairo_set_source_rgba(cr, color_convert(color, colors.fg_alpha))
-    cairo_rectangle(cr, x, y, progress, thick)
+    cairo_rectangle(cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y, scale * progress, scale * thick)
     cairo_fill(cr)
 end
 
@@ -99,12 +102,12 @@ function rectangle_bottomup(x, y, len, thick, value_str, max_value, color)
     if value > max_value then value = max_value end
 
     cairo_set_source_rgba(cr, color_convert(colors.bg, colors.bg_alpha))
-    cairo_rectangle(cr, x, y, thick, -len)
+    cairo_rectangle(cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y, scale * thick, -scale * len)
     cairo_fill(cr)
     cairo_set_source_rgba(cr, color_convert(color, colors.fg_alpha))
 
     local progress = (len / max_value) * value
-    cairo_rectangle(cr, x, y, thick, -progress)
+    cairo_rectangle(cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y, scale * thick, -scale * progress)
     cairo_fill(cr)
 end
 
@@ -127,9 +130,9 @@ end
 
 function _write_(x, y, text, font_name, font_size, color, alpha, font_slant, font_face)
     cairo_select_font_face (cr, font_name, font_slant, font_face);
-    cairo_set_font_size (cr, font_size)
+    cairo_set_font_size (cr, scale * font_size)
     cairo_set_source_rgba (cr, color_convert(color, alpha))
-    cairo_move_to (cr, x, y)
+    cairo_move_to (cr, scr_prefix_x + scale * x, scr_prefix_y + scale * y)
     cairo_show_text (cr, text)
     cairo_stroke (cr)
 end
@@ -282,7 +285,7 @@ function diskio_read(device)    return parse("diskio_read " .. device) end
 function diskio_write(device)   return parse("diskio_write " .. device) end
 function cpu_temperature()      return parse("acpitemp") end                --  temperature in C°
 function cpu_temperature_sensors()                                          -- this function uses the command 'sensors' to obtain the cpu temperature
-    local file = io.popen("sensors | awk '/CPU: / {printf substr($2,2,2)}' 2> /dev/null")
+    local file = io.popen("sensors | awk '/Core 0: / {printf substr($3,2,2)}' 2> /dev/null")
     if not file then
         io.stderr:write("Error while executing a command containing 'sensors' and 'awk'. Defaulting to cpu_temperature()\n")
         return cpu_temperature()

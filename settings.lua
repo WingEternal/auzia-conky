@@ -35,20 +35,20 @@ change_color_on_threshold = true
 CPU Cores (threads really)
 valid values are: 0, 2, 4, 6, 8, 10, 12
 ]]
-cpu_cores = 4
+cpu_cores = 6
 
 --[[
 EDIT THIS to match your network interface.
 You can find out by executing `ifconfig` or `ip link`.
 It might be "wlan0", "eth0", "wlp3s0" or something else
 ]]
-net_interface = "wlan0"
+net_interface = "wlp0s20f3"
 
 --[[
 this depends on your own internet speed
 ]]
-download_rate_maximum = 1000     -- kb
-upload_rate_maximum   = 1000     -- kb
+download_rate_maximum = 10000     -- kb
+upload_rate_maximum   = 10000     -- kb
 
 --[[
 Default font used by the convinient functions like write() and write_bold()
@@ -84,3 +84,7 @@ threshold_critical         = 80
 battery_threshold_warning  = 30
 battery_threshold_critical = 18
 
+-- scale factor, applied to each x, y, radius attribute
+scr_width  = 2880
+scr_height = 1800
+scale      = 1.5

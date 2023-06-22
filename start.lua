@@ -78,7 +78,7 @@ function draw_clock()
     local s = time_second()
     local m = time_minute()
     local h = time_hour24()
-    local date = string.format("%s, %s %s, %s", time_day_short(), time_month_short(), time_day_number(), time_year())
+    local date = string.format("%s - %s - %s", time_year(), time_month_number(), time_day_number())
 
     ring_clockwise(S.clock.x, S.clock.y, S.clock.radius, S.clock.width/4, 60, 420, s, 59, colors.fg)
     ring_clockwise(S.clock.x, S.clock.y, S.clock.radius+7, S.clock.width/2, -60, 300, m, 59, colors.fg)
